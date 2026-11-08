@@ -38,6 +38,6 @@ static const char *state_to_str(enum state_t state){
 }
 
 /* func prototype */
-void process_event(struct ddr3_controller_t *ctrl, enum ddr3_event_t event);
+void process_event(struct ddr3_controller_t *ctrl, enum event_t event);
 
 #endif /* __FSM_H__ */

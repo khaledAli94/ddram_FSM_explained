@@ -1,7 +1,7 @@
 #include <fsm.h>
 
-void process_event(struct ddr3_controller_t *ctrl, enum ddr3_event_t event){
-    enum ddr3_state_t previous_state = ctrl->current_state;
+void process_event(struct ddr3_controller_t *ctrl, enum event_t event){
+    enum state_t previous_state = ctrl->current_state;
 
     switch (ctrl->current_state) {
 
