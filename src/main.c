@@ -1,4 +1,9 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include "ctrl.h"
+#include "fsm.h"
 
 struct ddr3_controller_t ddr3;
 

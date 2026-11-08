@@ -1,7 +1,6 @@
 #ifndef __FSM_H__
 #define __FSM_H__
 
-
 enum state_t {
     RESET,
     INITIALIZATION,
