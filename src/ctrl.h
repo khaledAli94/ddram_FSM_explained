@@ -5,13 +5,13 @@
 #include "fsm.h"
 
 /* DDR3 Controller Context */
-struct ddr3_controller_t {
+struct ddr_ctrl_t {
     enum state_t current_state;
     unsigned active_bank;
     unsigned active_row;
 };
 
-static inline void ddr3_init_controller(struct ddr3_controller_t *ctrl) {
+static inline void ddr3_init_controller(struct ddr_ctrl_t *ctrl) {
     ctrl->current_state = RESET;
     ctrl->active_bank = 0;
     ctrl->active_row = 0;

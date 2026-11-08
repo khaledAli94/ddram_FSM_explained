@@ -1,7 +1,7 @@
 #ifndef __FSM_H__
 #define __FSM_H__
 
-struct ddr3_controller_t;
+struct ddr_ctrl_t;
 
 enum state_t {
     RESET,
@@ -22,6 +22,7 @@ enum event_t {
     CMD_WRITE,    /* WRITE command */
     CMD_PRE,      /* PRECHARGE command */
     CMD_REF,      /* REFRESH command */
+    REF_DONE,     /* Refresh completed */
     BURST_DONE    /* Burst Read/Write completed */
 };
 
@@ -40,6 +41,6 @@ static const char *state_to_str(enum state_t state){
 }
 
 /* func prototype */
-void process_event(struct ddr3_controller_t *ctrl, enum event_t event);
+void process_event(struct ddr_ctrl_t *ctrl, enum event_t event);
 
 #endif /* __FSM_H__ */
