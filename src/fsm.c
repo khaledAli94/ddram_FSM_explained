@@ -2,7 +2,7 @@
 #include "fsm.h"
 #include "ctrl.h"
 
-void process_event(struct ddr3_controller_t *ctrl, enum event_t event){
+void process_event(struct ddr_ctrl_t *ctrl, enum event_t event){
     enum state_t previous_state = ctrl->current_state;
 
     switch (ctrl->current_state) {
@@ -64,8 +64,10 @@ void process_event(struct ddr3_controller_t *ctrl, enum event_t event){
             break;
 
         case REFRESHING:
-            /* Refresh cycle complete */
-            ctrl->current_state = IDLE;
+            if (event == REF_DONE) {
+                /* Refresh cycle complete */
+                ctrl->current_state = IDLE;
+            }
             break;
 
         default:
@@ -73,5 +75,5 @@ void process_event(struct ddr3_controller_t *ctrl, enum event_t event){
             break;
     }
 
-    printf("[Transition] %s -> %s\n", state_to_str(previous_state), state_to_str(ctrl->current_state));
+    printf("[Transition] \033[31m%s\033[0m -> \033[32m%s\033[0m\n", state_to_str(previous_state), state_to_str(ctrl->current_state));
 }
