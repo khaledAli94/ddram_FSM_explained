@@ -28,7 +28,7 @@ enum ddr3_event_t {
 ```
 
 ## Simplified State Diagram 
-![](DRAM_FSM.png)
+![](img/DRAM_FSM.png)
 
 
 correct read/write operation sequence:
