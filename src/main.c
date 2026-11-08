@@ -7,7 +7,7 @@
 
 struct ddr3_controller_t ddr3;
 
-int main(int argc, char **argv) {
+int main(void) {
 
 
     ddr3_init_controller(&ddr3);

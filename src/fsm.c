@@ -1,11 +1,13 @@
-#include <fsm.h>
+#include <stdio.h>
+#include "fsm.h"
+#include "ctrl.h"
 
 void process_event(struct ddr3_controller_t *ctrl, enum event_t event){
     enum state_t previous_state = ctrl->current_state;
 
     switch (ctrl->current_state) {
 
-        case STATE_RESET:
+        case RESET:
             if (event == POWER_ON) {
                 /* Power-up sequence: CKE low, RESET# assertion, wait time */
                 ctrl->current_state = INITIALIZATION;
@@ -19,7 +21,7 @@ void process_event(struct ddr3_controller_t *ctrl, enum event_t event){
             }
             break;
 
-        case STATE_IDLE:
+        case IDLE:
             if (event == CMD_ACT) {
                 /* Open a specific Bank and Row (tRCD delay starts here) */
                 ctrl->current_state = BANK_ACTIVE;

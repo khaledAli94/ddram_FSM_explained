@@ -1,6 +1,8 @@
 #ifndef __FSM_H__
 #define __FSM_H__
 
+struct ddr3_controller_t;
+
 enum state_t {
     RESET,
     INITIALIZATION,

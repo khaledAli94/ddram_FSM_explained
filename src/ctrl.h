@@ -1,6 +1,8 @@
 #ifndef __CTRL_H__
 #define __CTRL_H__
 
+#include <stdio.h>
+#include "fsm.h"
 
 /* DDR3 Controller Context */
 struct ddr3_controller_t {
@@ -9,7 +11,7 @@ struct ddr3_controller_t {
     unsigned active_row;
 };
 
-static void ddr3_init_controller(struct ddr3_controller_t *ctrl) {
+static inline void ddr3_init_controller(struct ddr3_controller_t *ctrl) {
     ctrl->current_state = RESET;
     ctrl->active_bank = 0;
     ctrl->active_row = 0;
