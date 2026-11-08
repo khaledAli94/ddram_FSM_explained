@@ -31,8 +31,16 @@ enum ddr3_event_t {
 ![](img/DRAM_FSM.png)
 
 
-correct read/write operation sequence:
+## correct read/write operation sequence:
+```mermaid
+stateDiagram-v2
+    direction LR
+    IDLE --> BANK_ACTIVE: 1. CMD_ACT
+    BANK_ACTIVE --> READING_WRITING: 2. CMD_READ / CMD_WRITE
+    READING_WRITING --> IDLE: 3. CMD_PRE
+```
 
+## FSM implm.
 ```mermaid
 stateDiagram-v2
     [*] --> RESET
