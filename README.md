@@ -4,3 +4,6 @@ this Repo is for demonstrating how ddr finite state machine works in principle, 
 
 ## Simplified State Diagram 
 ![](DRAM_FSM.png)
+
+ref: JEDEC SOLID STATE TECHNOLOGY ASSOCIATION
+JEDEC standard (JESD79-3C)
