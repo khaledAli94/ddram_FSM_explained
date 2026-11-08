@@ -6,64 +6,64 @@ void process_event(struct ddr3_controller_t *ctrl, enum event_t event){
     switch (ctrl->current_state) {
 
         case STATE_RESET:
-            if (event == EVENT_POWER_ON) {
+            if (event == POWER_ON) {
                 /* Power-up sequence: CKE low, RESET# assertion, wait time */
-                ctrl->current_state = STATE_INITIALIZATION;
+                ctrl->current_state = INITIALIZATION;
             }
             break;
 
-        case STATE_INITIALIZATION:
-            if (event == EVENT_INIT_DONE) {
+        case INITIALIZATION:
+            if (event == INIT_DONE) {
                 /* Bring up CKE, send ZQ Calibration, load Mode Registers (MR0-MR3) */
-                ctrl->current_state = STATE_IDLE;
+                ctrl->current_state = IDLE;
             }
             break;
 
         case STATE_IDLE:
-            if (event == EVENT_CMD_ACT) {
+            if (event == CMD_ACT) {
                 /* Open a specific Bank and Row (tRCD delay starts here) */
-                ctrl->current_state = STATE_BANK_ACTIVE;
-            } else if (event == EVENT_CMD_REF) {
+                ctrl->current_state = BANK_ACTIVE;
+            } else if (event == CMD_REF) {
                 /* Refresh all banks (tRFC delay applies) */
-                ctrl->current_state = STATE_REFRESHING;
+                ctrl->current_state = REFRESHING;
             }
             break;
 
-        case STATE_BANK_ACTIVE:
-            if (event == EVENT_CMD_READ) {
+        case BANK_ACTIVE:
+            if (event == CMD_READ) {
                 /* Issue READ command (CAS Latency tCL applies) */
-                ctrl->current_state = STATE_READING;
-            } else if (event == EVENT_CMD_WRITE) {
+                ctrl->current_state = READING;
+            } else if (event == CMD_WRITE) {
                 /* Issue WRITE command (Write Latency tCWL applies) */
-                ctrl->current_state = STATE_WRITING;
-            } else if (event == EVENT_CMD_PRE) {
+                ctrl->current_state = WRITING;
+            } else if (event == CMD_PRE) {
                 /* Close the active row (tRP delay applies) */
-                ctrl->current_state = STATE_PRECHARGING;
+                ctrl->current_state = PRECHARGING;
             }
             break;
 
-        case STATE_READING:
-            if (event == EVENT_BURST_DONE) {
+        case READING:
+            if (event == BURST_DONE) {
                 /* Return to active bank after burst read completed */
-                ctrl->current_state = STATE_BANK_ACTIVE;
+                ctrl->current_state = BANK_ACTIVE;
             }
             break;
 
-        case STATE_WRITING:
-            if (event == EVENT_BURST_DONE) {
+        case WRITING:
+            if (event == BURST_DONE) {
                 /* Return to active bank after burst write completed (tWR delay applies) */
-                ctrl->current_state = STATE_BANK_ACTIVE;
+                ctrl->current_state = BANK_ACTIVE;
             }
             break;
 
-        case STATE_PRECHARGING:
+        case PRECHARGING:
             /* Row deactivated, bank back to IDLE */
-            ctrl->current_state = STATE_IDLE;
+            ctrl->current_state = IDLE;
             break;
 
-        case STATE_REFRESHING:
+        case REFRESHING:
             /* Refresh cycle complete */
-            ctrl->current_state = STATE_IDLE;
+            ctrl->current_state = IDLE;
             break;
 
         default:
