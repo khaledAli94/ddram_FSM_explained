@@ -28,7 +28,6 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 # Clean build artifacts
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET)
-	@echo "Cleaned build directory and target executable."
 
 # Rebuild everything
 rebuild: clean all

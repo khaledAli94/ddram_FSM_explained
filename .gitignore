@@ -1,2 +1,13 @@
-.vscode/
+# Build output and compiled binaries
 build/
+ddr3_sim
+*.o
+*.exe
+*.out
+
+# Editor / IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store

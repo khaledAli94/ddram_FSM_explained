@@ -69,9 +69,9 @@ void process_event(struct ddr3_controller_t *ctrl, enum event_t event){
             break;
 
         default:
-            printf("[DDR3 Error] Invalid state encountered!\n");
+            printf("[Fatal] Invalid state encountered!\n");
             break;
     }
 
-    printf("[DDR3 Transition] Event: %d | State: %s -> %s\n", event, state_to_str(previous_state), state_to_str(ctrl->current_state));
+    printf("[Transition] %s -> %s\n", state_to_str(previous_state), state_to_str(ctrl->current_state));
 }

@@ -15,7 +15,7 @@ static inline void ddr3_init_controller(struct ddr3_controller_t *ctrl) {
     ctrl->current_state = RESET;
     ctrl->active_bank = 0;
     ctrl->active_row = 0;
-    printf("[DDR3 FSM] Controller initialized to state: %s\n", state_to_str(ctrl->current_state));
+    printf("[init] ctrl goes to state: %s\n", state_to_str(ctrl->current_state));
 }
 
 #endif /* __CTRL_H__ */
