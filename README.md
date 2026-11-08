@@ -33,52 +33,51 @@ enum ddr3_event_t {
 
 correct read/write operation sequence:
 
-``` mermaid
-sequenceDiagram
-    autonumber
-    actor CPU as CPU / Bus Master
-    participant Ctrl as DDR3 Controller (FSM)
-    participant DRAM as DDR3 SDRAM Chip
+```mermaid
+flowchart TD
+    %% Define Node Styles
+    classDef stateFill fill:#2d3748,stroke:#4a5568,stroke-width:2px,color:#fff
+    classDef eventFill fill:#1a365d,stroke:#2b6cb0,stroke-width:2px,color:#fff
 
-    %% 1. Initialization Sequence
-    rect rgb(240, 240, 240)
-        note over CPU, DRAM: 1. Power-Up & Initialization Phase
-        CPU->>Ctrl: Power-On Signal (POWER_ON)
-        Ctrl->>DRAM: RESET# & CKE Initialization Signals
-        Ctrl->>DRAM: Mode Register Set (MR0-MR3) & ZQ Calibration
-        Ctrl-->>CPU: Controller Ready (INIT_DONE)
-    end
+    %% State Nodes (Rectangles)
+    RESET[RESET State]:::stateFill
+    INIT[INITIALIZATION State]:::stateFill
+    IDLE[IDLE State]:::stateFill
+    BANK_ACT[BANK_ACTIVE State]:::stateFill
+    READING[READING State]:::stateFill
+    WRITING[WRITING State]:::stateFill
+    PRE[PRECHARGING State]:::stateFill
+    REF[REFRESHING State]:::stateFill
 
-    %% 2. Activate Row Sequence
-    rect rgb(230, 245, 230)
-        note over CPU, DRAM: 2. Row Activation (Row Miss Scenario)
-        CPU->>Ctrl: Read Request (Address: Bank 0, Row A, Col X)
-        Ctrl->>DRAM: CMD_ACT (Bank 0, Row A)
-        note over DRAM: Open Row A into Sense Amplifiers<br/>Must wait tRCD timing delay
-    end
+    %% Event Nodes (Ellipses)
+    E_POWER(((POWER_ON Event))):::eventFill
+    E_INIT_DONE(((INIT_DONE Event))):::eventFill
+    E_ACT(((CMD_ACT Event))):::eventFill
+    E_READ(((CMD_READ Event))):::eventFill
+    E_WRITE(((CMD_WRITE Event))):::eventFill
+    E_BURST_R(((BURST_DONE Event))):::eventFill
+    E_BURST_W(((BURST_DONE Event))):::eventFill
+    E_PRE(((CMD_PRE Event))):::eventFill
+    E_REF(((CMD_REF Event))):::eventFill
 
-    %% 3. Read / Write Burst Sequence
-    rect rgb(230, 230, 250)
-        note over CPU, DRAM: 3. Read/Write Column Access (Row Hit)
-        Ctrl->>DRAM: CMD_READ (Bank 0, Col X)
-        note over DRAM: Wait CAS Latency (tCL)
-        DRAM-->>Ctrl: Data Burst (DQ Lines)
-        Ctrl-->>CPU: Return Requested Data
+    %% Flow Sequence
+    RESET --> E_POWER --> INIT
+    INIT --> E_INIT_DONE --> IDLE
 
-        CPU->>Ctrl: Write Request (Address: Bank 0, Row A, Col Y)
-        Ctrl->>DRAM: CMD_WRITE (Bank 0, Col Y) + Data Burst
-        note over DRAM: Write Data into Open Row Buffer<br/>Must wait tWR timing delay
-    end
+    %% Idle Transitions
+    IDLE --> E_ACT --> BANK_ACT
+    IDLE --> E_REF --> REF
+    REF --> IDLE
 
-    %% 4. Precharge Sequence
-    rect rgb(255, 235, 235)
-        note over CPU, DRAM: 4. Row Deactivation (Precharge)
-        CPU->>Ctrl: Request Access to Row B (Different Row)
-        Ctrl->>DRAM: CMD_PRE (Bank 0)
-        note over DRAM: Close Row A & Recharge Capacitors<br/>Must wait tRP timing delay
-        Ctrl->>DRAM: CMD_ACT (Bank 0, Row B)
-        note over Ctrl, DRAM: State machine continues with Row B access...
-    end
+    %% Bank Active Operations
+    BANK_ACT --> E_READ --> READING
+    READING --> E_BURST_R --> BANK_ACT
+
+    BANK_ACT --> E_WRITE --> WRITING
+    WRITING --> E_BURST_W --> BANK_ACT
+
+    BANK_ACT --> E_PRE --> PRE
+    PRE --> IDLE
 ```
 
 ref: JEDEC SOLID STATE TECHNOLOGY ASSOCIATION
