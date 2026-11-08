@@ -34,50 +34,24 @@ enum ddr3_event_t {
 correct read/write operation sequence:
 
 ```mermaid
-flowchart TD
-    %% Define Node Styles
-    classDef stateFill fill:#2d3748,stroke:#4a5568,stroke-width:2px,color:#fff
-    classDef eventFill fill:#1a365d,stroke:#2b6cb0,stroke-width:2px,color:#fff
+stateDiagram-v2
+    [*] --> RESET
+    RESET --> INITIALIZATION: POWER_ON
+    INITIALIZATION --> IDLE: INIT_DONE
 
-    %% State Nodes (Rectangles)
-    RESET[RESET State]:::stateFill
-    INIT[INITIALIZATION State]:::stateFill
-    IDLE[IDLE State]:::stateFill
-    BANK_ACT[BANK_ACTIVE State]:::stateFill
-    READING[READING State]:::stateFill
-    WRITING[WRITING State]:::stateFill
-    PRE[PRECHARGING State]:::stateFill
-    REF[REFRESHING State]:::stateFill
+    IDLE --> REFRESHING: CMD_REF
+    REFRESHING --> IDLE: BURST_DONE
 
-    %% Event Nodes (Ellipses)
-    E_POWER(((POWER_ON Event))):::eventFill
-    E_INIT_DONE(((INIT_DONE Event))):::eventFill
-    E_ACT(((CMD_ACT Event))):::eventFill
-    E_READ(((CMD_READ Event))):::eventFill
-    E_WRITE(((CMD_WRITE Event))):::eventFill
-    E_BURST_R(((BURST_DONE Event))):::eventFill
-    E_BURST_W(((BURST_DONE Event))):::eventFill
-    E_PRE(((CMD_PRE Event))):::eventFill
-    E_REF(((CMD_REF Event))):::eventFill
+    IDLE --> BANK_ACTIVE: CMD_ACT
+    
+    BANK_ACTIVE --> READING: CMD_READ
+    READING --> BANK_ACTIVE: BURST_DONE
 
-    %% Flow Sequence
-    RESET --> E_POWER --> INIT
-    INIT --> E_INIT_DONE --> IDLE
+    BANK_ACTIVE --> WRITING: CMD_WRITE
+    WRITING --> BANK_ACTIVE: BURST_DONE
 
-    %% Idle Transitions
-    IDLE --> E_ACT --> BANK_ACT
-    IDLE --> E_REF --> REF
-    REF --> IDLE
-
-    %% Bank Active Operations
-    BANK_ACT --> E_READ --> READING
-    READING --> E_BURST_R --> BANK_ACT
-
-    BANK_ACT --> E_WRITE --> WRITING
-    WRITING --> E_BURST_W --> BANK_ACT
-
-    BANK_ACT --> E_PRE --> PRE
-    PRE --> IDLE
+    BANK_ACTIVE --> PRECHARGING: CMD_PRE
+    PRECHARGING --> IDLE: BURST_DONE
 ```
 
 ref: JEDEC SOLID STATE TECHNOLOGY ASSOCIATION
