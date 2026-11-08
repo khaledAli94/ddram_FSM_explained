@@ -4,7 +4,9 @@
 #include "ctrl.h"
 #include "fsm.h"
 
-int main(void) {
+struct ddr_ctrl_t ddr3;
+
+void usage() {
     printf("\n=== DDR3 Simulator ===\n"
            "Usage:\n"
            "  read <row> <col>\n"
@@ -12,8 +14,11 @@ int main(void) {
            "  ref\n"
            "  stat\n"
            "======================\n");
+}
+
+int main(void) {
+    usage();
     
-    struct ddr_ctrl_t ddr3;
     ddr3_init_controller(&ddr3);
     process_event(&ddr3, POWER_ON);
     process_event(&ddr3, INIT_DONE);
@@ -21,7 +26,8 @@ int main(void) {
     char cmd[16];
     unsigned r, c;
 
-    while (printf("ddr3> ") && scanf("%15s", cmd) == 1) {
+    while (printf("ddr3> ") && scanf("%15s", cmd) == 1)
+    {
         if (strcmp(cmd, "stat") == 0) {
             printf("State: %s, Active Row: %u\n", state_to_str(ddr3.current_state), ddr3.active_row);
         } else if (strcmp(cmd, "ref") == 0) {
@@ -44,7 +50,7 @@ int main(void) {
             process_event(&ddr3, strcmp(cmd, "read") == 0 ? CMD_READ : CMD_WRITE);
             process_event(&ddr3, BURST_DONE);
         } else {
-            printf("Unknown command. Type read, write, ref, or stat.\n");
+            printf("Unknown command!\n");
         }
     }
     return 0;
