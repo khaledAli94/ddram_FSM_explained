@@ -7,15 +7,15 @@
 #include "bus.h"
 
 static void usage(void) {
-    printf("\n=== DDR3 Controller & Chip Simulator ===\n"
-           "JEDEC Standard Commands Usage:\n"
+    printf("\n=== DDR3 Bus-Centric Simulator (Data & Strobe Phase) ===\n"
+           "JEDEC Command Truth Table Usage:\n"
            "  act <bank> <row>     - ACTIVATE command (Opens Row)\n"
-           "  read <bank> <col>    - READ command (Read Burst)\n"
-           "  write <bank> <col>   - WRITE command (Write Burst)\n"
+           "  read <bank> <col>    - READ command (Read Burst + Strobes)\n"
+           "  write <bank> <col>   - WRITE command (Write Burst + Strobes)\n"
            "  pre <bank>           - PRECHARGE command (Closes Row)\n"
            "  refresh              - REFRESH command (All Banks)\n"
            "  status               - Show all banks status\n"
-           "===================================\n");
+           "=======================================================\n");
 }
 
 int main(void) {
@@ -47,7 +47,8 @@ int main(void) {
     while (printf("ddr3> ") && scanf("%15s", cmd) == 1) {
         if (strcmp(cmd, "status") == 0) {
             for (int i = 0; i < NUM_BANKS; i++) {
-                printf("Bank %u \033[32m%s\033[0m, Active Row: %u\n", i, state_to_str(dram.banks[i].state), dram.banks[i].open_row);
+                printf("Bank %u \033[32m%s\033[0m, Active Row: %u\n", 
+                       i, state_to_str(dram.banks[i].state), dram.banks[i].open_row);
             }
         } else if (strcmp(cmd, "refresh") == 0) {
             bool all_idle = true;
@@ -79,12 +80,13 @@ int main(void) {
             }
             struct dram_bank_t *bank = &dram.banks[b];
             if (bank->state != IDLE) {
-                printf("[Protocol Error] Cannot ACTIVATE Bank %u from state \033[32m%s\033[0m (Bank must be \033[33mIDLE\033[0m)\n", b, state_to_str(bank->state));
+                printf("[Protocol Error] Cannot ACTIVATE Bank %u from state \033[32m%s\033[0m (Bank must be \033[33mIDLE\033[0m)\n",
+                       b, state_to_str(bank->state));
                 continue;
             }
             bank->open_row = r;
 
-            dram_bus_encode(&bus, CMD_ACT, b, (unsigned short)r);
+            ctrl_encode_activate(&bus, b, (unsigned short)r);
             dram_bus_dump_trace(++cycle, &bus);
             enum event_t ev = dram_bus_decode(&bus);
             process_event(bank, b, ev);
@@ -96,7 +98,8 @@ int main(void) {
             }
             struct dram_bank_t *bank = &dram.banks[b];
             if (bank->state != BANK_ACTIVE) {
-                printf("[Protocol Error] Cannot PRECHARGE Bank %u from state \033[32m%s\033[0m (Bank must be \033[33mBANK_ACTIVE\033[0m)\n", b, state_to_str(bank->state));
+                printf("[Protocol Error] Cannot PRECHARGE Bank %u from state \033[32m%s\033[0m (Bank must be \033[33mBANK_ACTIVE\033[0m)\n",
+                       b, state_to_str(bank->state));
                 continue;
             }
             dram_bus_encode(&bus, CMD_PRE, b, 0);
@@ -112,14 +115,27 @@ int main(void) {
             }
             struct dram_bank_t *bank = &dram.banks[b];
             if (bank->state != BANK_ACTIVE) {
-                printf("[Protocol Error] Cannot %s Bank %u from state \033[32m%s\033[0m (Bank must be \033[33mBANK_ACTIVE\033[0m)\n", cmd, b, state_to_str(bank->state));
+                printf("[Protocol Error] Cannot %s Bank %u from state \033[32m%s\033[0m (Bank must be \033[33mBANK_ACTIVE\033[0m)\n",
+                       cmd, b, state_to_str(bank->state));
                 continue;
             }
+
+            // 1. Command Phase
             enum event_t cmd_ev = (strcmp(cmd, "read") == 0) ? CMD_READ : CMD_WRITE;
-            dram_bus_encode(&bus, cmd_ev, b, (unsigned short)c);
+            ctrl_encode_column_cmd(&bus, cmd_ev, b, (unsigned short)c, false);
             dram_bus_dump_trace(++cycle, &bus);
             enum event_t ev = dram_bus_decode(&bus);
             process_event(bank, b, ev);
+
+            // 2. Latency Phase (tCL for read, tCWL for write)
+            unsigned latency = (cmd_ev == CMD_READ) ? ctrl.timing.tCL : ctrl.timing.tCWL;
+            ctrl_wait_cycles(&cycle, &bus, latency);
+
+            // 3. Data Phase (Strobe toggling & byte streaming for BL8)
+            unsigned char dummy_pattern[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+            dram_bus_stream_burst(&cycle, &bus, dummy_pattern, ctrl.timing.burst_length);
+
+            // Finish burst
             process_event(bank, b, BURST_DONE);
         } else {
             printf("Unknown command. Type act, read, write, pre, refresh, or status.\n");

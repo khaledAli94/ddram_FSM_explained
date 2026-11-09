@@ -67,3 +67,21 @@ void dram_bus_dump_trace(unsigned long long cycle, const struct dram_bus_t *bus)
            bus->cas_n, bus->we_n, bus->ba.val, bus->addr.val);
     fflush(stdout);
 }
+
+void dram_bus_stream_burst(unsigned long long *cycle, struct dram_bus_t *bus, const unsigned char *pattern, unsigned length) {
+    for (unsigned beat = 0; beat < length; beat++) {
+        // --- Rising Strobe Edge ---
+        (*cycle)++;
+        bus->ck0 = 1;
+        bus->dqs0 = 1;
+        bus->dq.bytes[0].byte = pattern[beat];
+        bus->dq.bytes[1].byte = pattern[beat] + 1;
+        dram_bus_dump_trace(*cycle, bus);
+
+        // --- Falling Strobe Edge ---
+        (*cycle)++;
+        bus->ck0 = 0;
+        bus->dqs0 = 0;
+        dram_bus_dump_trace(*cycle, bus);
+    }
+}

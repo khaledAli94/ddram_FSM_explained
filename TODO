@@ -1,0 +1,30 @@
+  DONE... 1. Why the Data and Strobe Logic Don't Work Yet (Data Phase)
+  - The command phase (FSM state transitions, JEDEC truth table, bus encoding/decoding) is fully functional.
+  - The data phase requires protocol simulation loops for data strobes (dqs0-dqs3) and byte lanes (dq.bytes[0..3]) across burst transfers (BL8/BL4).
+
+  DONE... 2. How the Address Field Forms Commands (Address Multiplexing)
+  - Implemented in ctrl.c and main.c: Address lines (A[0..15]) are successfully multiplexed over time.
+  - ACTIVATE carries the 14-bit Row Address on A[0..13].
+  - READ/WRITE carries the Column Address on A[0..9] along with bit-packed control flags like A10 (Auto-Precharge - AP).
+
+  3. Is a Memory Storage Array Mandatory to Simulate Strobes?
+  - No. A backing memory array is optional for waveform visualization.
+  - Strobes (dqs) and data lanes (dq) are timing and protocol behaviors that can be simulated via protocol burst loops (echo / test patterns) without persistent byte storage.
+
+  4. Strobe Ownership and Architecture ($DQS$):
+  - Physical Wires (`dqs0`–`dqs3`): Live on the shared physical bus (`struct dram_bus_t`).
+  - Driver Role: Alternates based on transaction direction:
+    * **READ:** Driven by the **DRAM Chip**.
+    * **WRITE:** Driven by the **Memory Controller**.
+  - Timing & Latency ($t_{CL}$, $t_{CWL}$, $t_{BURST}$, $t_{DQSCK}$): Enforced by the **Memory Controller** via unified AC timing configuration (`struct ddr3_timing_t`).
+
+  5. Modular Multi-Chip Architecture Planning:
+  - Design the DRAM chip IC to be modular so the controller can drive 1, 2, or 8 chips.
+  - Ensure pre-defined standard 8-bank structures per chip IC.
+
+  6. Next Steps for Data Phase Implementation:
+  - Add latency countdown timers ($t_{CL}$ for Read, $t_{CWL}$ for Write) in controller.
+  - Implement protocol burst loops in bus/controller layer to toggle dqs0-dqs3 and stream dq.bytes[0..3] beats for Pygame logic analyzer tracing.
+
+
+7. we may simulate fifo/scheduling for real operation 
