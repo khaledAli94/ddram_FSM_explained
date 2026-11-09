@@ -30,6 +30,9 @@ enum ddr3_event_t {
 ## usage:
 ![](img/usage.gif)
 
+## final goal "under construction":
+![](img/effective_result.gif)
+
 ## Simplified State Diagram 
 ![](img/DRAM_FSM.png)
 

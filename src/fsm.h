@@ -1,7 +1,7 @@
 #ifndef __FSM_H__
 #define __FSM_H__
 
-struct ddr_ctrl_t;
+struct dram_bank_t;
 
 enum state_t {
     RESET,
@@ -23,10 +23,11 @@ enum event_t {
     CMD_PRE,      /* PRECHARGE command */
     CMD_REF,      /* REFRESH command */
     REF_DONE,     /* Refresh completed */
+    PRE_DONE,     /* Precharge completed */
     BURST_DONE    /* Burst Read/Write completed */
 };
 
-static const char *state_to_str(enum state_t state){
+static inline const char *state_to_str(enum state_t state){
     switch (state) {
         case RESET:          return "RESET";
         case INITIALIZATION: return "INITIALIZATION";
@@ -41,6 +42,6 @@ static const char *state_to_str(enum state_t state){
 }
 
 /* func prototype */
-void process_event(struct ddr_ctrl_t *ctrl, enum event_t event);
+void process_event(struct dram_bank_t *bank, unsigned bank_idx, enum event_t event);
 
 #endif /* __FSM_H__ */
