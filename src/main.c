@@ -6,8 +6,8 @@
 #include "fsm.h"
 
 static void usage(void) {
-    printf("\n=== DDR3 Multi-Bank Controller & Chip Simulator ===\n"
-           "JEDEC Command Truth Table Usage:\n"
+    printf("\n=== DDR3 Controller & Chip Simulator ===\n"
+           "JEDEC Standard Commands Usage:\n"
            "  act <bank> <row>     - ACTIVATE command (Opens Row)\n"
            "  read <bank> <col>    - READ command (Read Burst)\n"
            "  write <bank> <col>   - WRITE command (Write Burst)\n"

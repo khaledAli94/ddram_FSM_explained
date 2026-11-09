@@ -1,7 +1,7 @@
 #ifndef __CHIP_H__
 #define __CHIP_H__
 
-#include "fsm.h" // Uses your existing state_t
+#include "fsm.h"
 
 #define NUM_BANKS 8
 #define NUM_ROWS  16384 // e.g., 14-bit row address
