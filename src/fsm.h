@@ -17,6 +17,7 @@ enum state_t {
 enum event_t {
     POWER_ON,
     INIT_DONE,
+    CMD_NOP,      /* NOP / DESELECT command */
     CMD_ACT,      /* ACTIVATE command */
     CMD_READ,     /* READ command */
     CMD_WRITE,    /* WRITE command */

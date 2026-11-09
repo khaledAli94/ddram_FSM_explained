@@ -3,6 +3,10 @@
 #include "chip.h"
 
 void process_event(struct dram_bank_t *bank, unsigned bank_idx, enum event_t event){
+    if (event == CMD_NOP) {
+        return; // NOP does not change state or trigger transitions
+    }
+
     enum state_t previous_state = bank->state;
 
     switch (bank->state) {
@@ -77,5 +81,5 @@ void process_event(struct dram_bank_t *bank, unsigned bank_idx, enum event_t eve
             break;
     }
 
-    printf("[Transition] (Bank %u) \033[31m%s\033[0m -> \033[32m%s\033[0m\n", bank_idx, state_to_str(previous_state), state_to_str(bank->state));
+    printf("[Transition](Bank %u) \033[31m%s\033[0m -> \033[32m%s\033[0m\n", bank_idx, state_to_str(previous_state), state_to_str(bank->state));
 }
