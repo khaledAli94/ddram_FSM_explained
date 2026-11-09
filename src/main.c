@@ -4,17 +4,18 @@
 #include "ctrl.h"
 #include "chip.h"
 #include "fsm.h"
+#include "bus.h"
 
 static void usage(void) {
-    printf("\n=== DDR3 Controller & Chip Simulator ===\n"
-           "JEDEC Standard Commands Usage:\n"
+    printf("\n=== DDR3 Bus-Centric Simulator (Data & Strobe Phase) ===\n"
+           "JEDEC Command Truth Table Usage:\n"
            "  act <bank> <row>     - ACTIVATE command (Opens Row)\n"
-           "  read <bank> <col>    - READ command (Read Burst)\n"
-           "  write <bank> <col>   - WRITE command (Write Burst)\n"
+           "  read <bank> <col>    - READ command (Read Burst + Strobes)\n"
+           "  write <bank> <col>   - WRITE command (Write Burst + Strobes)\n"
            "  pre <bank>           - PRECHARGE command (Closes Row)\n"
            "  refresh              - REFRESH command (All Banks)\n"
            "  status               - Show all banks status\n"
-           "===================================================\n");
+           "=======================================================\n");
 }
 
 int main(void) {
@@ -22,13 +23,21 @@ int main(void) {
     
     struct ddr_ctrl_t ctrl;
     struct dram_chip_t dram;
+    struct dram_bus_t bus;
 
     ddr3_init_controller(&ctrl);
     dram_chip_init(&dram);
 
-    // Initialize all banks in DRAM chip
+    unsigned long long cycle = 0;
+
+    // Initialize all banks in DRAM chip via the shared bus
     for (int i = 0; i < NUM_BANKS; i++) {
+        dram_bus_encode(&bus, POWER_ON, i, 0);
+        dram_bus_dump_trace(++cycle, &bus);
         process_event(&dram.banks[i], i, POWER_ON);
+
+        dram_bus_encode(&bus, INIT_DONE, i, 0);
+        dram_bus_dump_trace(++cycle, &bus);
         process_event(&dram.banks[i], i, INIT_DONE);
     }
 
@@ -42,7 +51,6 @@ int main(void) {
                        i, state_to_str(dram.banks[i].state), dram.banks[i].open_row);
             }
         } else if (strcmp(cmd, "refresh") == 0) {
-            // Verify all banks are IDLE before refreshing
             bool all_idle = true;
             for (int i = 0; i < NUM_BANKS; i++) {
                 if (dram.banks[i].state != IDLE) {
@@ -54,7 +62,13 @@ int main(void) {
                 printf("[Protocol Error] \033[33mCannot issue refresh. All banks must be IDLE.\033[0m\n");
             } else {
                 for (int i = 0; i < NUM_BANKS; i++) {
-                    process_event(&dram.banks[i], i, CMD_REF);
+                    dram_bus_encode(&bus, CMD_REF, i, 0);
+                    dram_bus_dump_trace(++cycle, &bus);
+                    enum event_t ev = dram_bus_decode(&bus);
+                    process_event(&dram.banks[i], i, ev);
+
+                    dram_bus_encode(&bus, REF_DONE, i, 0);
+                    dram_bus_dump_trace(++cycle, &bus);
                     process_event(&dram.banks[i], i, REF_DONE);
                 }
             }
@@ -71,7 +85,11 @@ int main(void) {
                 continue;
             }
             bank->open_row = r;
-            process_event(bank, b, CMD_ACT);
+
+            ctrl_encode_activate(&bus, b, (unsigned short)r);
+            dram_bus_dump_trace(++cycle, &bus);
+            enum event_t ev = dram_bus_decode(&bus);
+            process_event(bank, b, ev);
         } else if (strcmp(cmd, "pre") == 0) {
             if (scanf("%u", &b) != 1 || b >= NUM_BANKS) {
                 printf("Error: pre requires <bank (0-%d)>\n", NUM_BANKS - 1);
@@ -84,7 +102,10 @@ int main(void) {
                        b, state_to_str(bank->state));
                 continue;
             }
-            process_event(bank, b, CMD_PRE);
+            dram_bus_encode(&bus, CMD_PRE, b, 0);
+            dram_bus_dump_trace(++cycle, &bus);
+            enum event_t ev = dram_bus_decode(&bus);
+            process_event(bank, b, ev);
             process_event(bank, b, PRE_DONE);
         } else if (strcmp(cmd, "read") == 0 || strcmp(cmd, "write") == 0) {
             if (scanf("%u %u", &b, &c) != 2 || b >= NUM_BANKS) {
@@ -98,7 +119,23 @@ int main(void) {
                        cmd, b, state_to_str(bank->state));
                 continue;
             }
-            process_event(bank, b, strcmp(cmd, "read") == 0 ? CMD_READ : CMD_WRITE);
+
+            // 1. Command Phase
+            enum event_t cmd_ev = (strcmp(cmd, "read") == 0) ? CMD_READ : CMD_WRITE;
+            ctrl_encode_column_cmd(&bus, cmd_ev, b, (unsigned short)c, false);
+            dram_bus_dump_trace(++cycle, &bus);
+            enum event_t ev = dram_bus_decode(&bus);
+            process_event(bank, b, ev);
+
+            // 2. Latency Phase (tCL for read, tCWL for write)
+            unsigned latency = (cmd_ev == CMD_READ) ? ctrl.timing.tCL : ctrl.timing.tCWL;
+            ctrl_wait_cycles(&cycle, &bus, latency);
+
+            // 3. Data Phase (Strobe toggling & byte streaming for BL8)
+            unsigned char dummy_pattern[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+            dram_bus_stream_burst(&cycle, &bus, dummy_pattern, ctrl.timing.burst_length);
+
+            // Finish burst
             process_event(bank, b, BURST_DONE);
         } else {
             printf("Unknown command. Type act, read, write, pre, refresh, or status.\n");
