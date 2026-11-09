@@ -3,6 +3,12 @@
 
 struct dram_bank_t;
 
+// Terminal ANSI Color Macros
+#define RST   "\033[0m"
+#define RED   "\033[31m"
+#define GRN   "\033[32m"
+#define YEL   "\033[33m"
+
 enum state_t {
     RESET,
     INITIALIZATION,

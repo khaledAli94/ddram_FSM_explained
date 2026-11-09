@@ -4,10 +4,11 @@
 #include <stdbool.h>
 #include "fsm.h"
 #include "bus.h"
+#include "chip.h"
 
 #define NUM_BANKS 8
 
-// Unified JEDEC Timing, Configuration, and AC Specifications for DDR3-1600 (11-11-11)
+// JEDEC Timing, Configuration, and AC Specifications for DDR3-1600 (11-11-11)
 struct ddr3_timing_t {
     // Cycle-Count Timestamps & Latencies (Integer Clocks)
     unsigned tRCD;      // Row-to-Column Delay (11 cycles)
@@ -50,9 +51,12 @@ struct ddr_ctrl_t {
 
 void ddr3_init_controller(struct ddr_ctrl_t *ctrl);
 
-// Address multiplexing & latency helpers
-void ctrl_encode_activate(struct dram_bus_t *bus, unsigned bank, unsigned short row);
-void ctrl_encode_column_cmd(struct dram_bus_t *bus, enum event_t cmd, unsigned bank, unsigned short col, bool auto_precharge);
-void ctrl_wait_cycles(unsigned long long *cycle, struct dram_bus_t *bus, unsigned count);
+// Controller Command Ownership Handlers
+void ctrl_boot_sequence(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus);
+void ctrl_handle_status(const struct dram_chip_t *dram);
+void ctrl_handle_refresh(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus);
+void ctrl_handle_activate(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, unsigned bank, unsigned short row);
+void ctrl_handle_precharge(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, unsigned bank);
+void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, const char *type, unsigned bank, unsigned short col);
 
 #endif /* __CTRL_H__ */
