@@ -1,7 +1,7 @@
 #include "main.h"
 
 void usage(void) {
-    printf("\n=== JEDEC DDR3 Simulator ===\n"
+    printf("\n=== JEDEC DDR3 Simulation Engine ===\n"
            "  Usage:\n"
            "  act <bank> <row>     - ACTIVATE command (Opens Row)\n"
            "  read <bank> <col>    - READ command (Read Burst + Strobes)\n"

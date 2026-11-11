@@ -14,3 +14,10 @@ TODO
 *.swp
 *.swo
 .DS_Store
+
+# Private visualization and simulation scripts & assets
+simulate.py
+plot.py
+*.png
+img/
+
