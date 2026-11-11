@@ -15,9 +15,8 @@ TODO
 *.swo
 .DS_Store
 
-# Private visualization and simulation scripts & assets
+# Private visualization scripts (keep local)
 simulate.py
 plot.py
-*.png
-img/
+
 
