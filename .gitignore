@@ -5,9 +5,19 @@ ddr3_sim
 *.exe
 *.out
 
+# Temporary / notes / dumps
+TODO
+
 # Editor / IDE files
 .vscode/
 .idea/
 *.swp
 *.swo
 .DS_Store
+
+# Private visualization and simulation scripts & assets
+simulate.py
+plot.py
+*.png
+img/
+
