@@ -10,23 +10,14 @@
 #define NUM_COLS  512   // 9-bit column address
 
 /*
- * ============================================================================
- * JEDEC DRAM FORMULAS REFERENCE:
- * ============================================================================
- * 1. Total Density (in bits):
- *    Density = Banks × Rows × Columns × Organization (Data Width in bits)
- *
- * 2. Total Capacity (in Megabytes - MB):
- *    Capacity (MB) = (Banks × Rows × Columns × Organization) / 8 / 1,048,576
- *
- * 3. Address Lines to Geometry Mapping:
- *    Rows    = 2 ^ (Number of Row Address Pins)
- *    Columns = 2 ^ (Number of Column Address Pins)
- *
- * 4. Burst Transfer Payload Size (Bytes per Burst Length BL):
- *    Payload = (Organization / 8) × Burst_Length
+ * density = banks × rows × columns × organization
+ * bank_bits = log2(banks)
+ * row_bits  = log2(rows)
+ * col_bits  = log2(columns)
+ * Payload_sz[Bytes per Burst Length BL] = (Organization / 8) × Burst_Length
  * ============================================================================
  */
+
 enum dram_org_t {
     ORG_X4  = 4,
     ORG_X8  = 8,

@@ -1,4 +1,5 @@
 #include "chip.h"
+#include "main.h"
 #include <stdio.h>
 
 void dram_chip_init(struct dram_chip_t *chip) {
@@ -35,5 +36,10 @@ bool dram_chip_all_banks_idle(const struct dram_chip_t *chip) {
 void dram_chip_receive_bus(struct dram_chip_t *chip, unsigned bank_idx, const struct dram_bus_t *bus) {
     if (bus->cs_n == 1) return; // Ignore if deselected
     enum event_t ev = dram_bus_decode(bus);
-    process_event(&chip->banks[bank_idx], bank_idx, ev);
+    enum state_t prev = chip->banks[bank_idx].state;
+    chip->banks[bank_idx].state = process_event(prev, ev);
+    if (prev != chip->banks[bank_idx].state) {
+        printf("[Transition](Bank %u) " RED "%s" RST " -> " GRN "%s" RST "\n", 
+               bank_idx, state_to_str(prev), state_to_str(chip->banks[bank_idx].state));
+    }
 }

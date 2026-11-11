@@ -1,78 +1,77 @@
 #include <stdio.h>
 #include "fsm.h"
-#include "chip.h"
 
-void process_event(struct dram_bank_t *bank, unsigned bank_idx, enum event_t event){
+enum state_t process_event(enum state_t current_state, enum event_t event) {
     if (event == CMD_NOP) {
-        return; // NOP does not change state or trigger transitions
+        return current_state; // NOP does not change state
     }
 
-    enum state_t previous_state = bank->state;
+    enum state_t next_state = current_state;
 
-    switch (bank->state) {
+    switch (current_state) {
 
         case RESET:
             if (event == POWER_ON) {
                 /* Power-up sequence: CKE low, RESET# assertion, wait time */
-                bank->state = INITIALIZATION;
+                next_state = INITIALIZATION;
             }
             break;
 
         case INITIALIZATION:
             if (event == INIT_DONE) {
                 /* Bring up CKE, send ZQ Calibration, load Mode Registers (MR0-MR3) */
-                bank->state = IDLE;
+                next_state = IDLE;
             }
             break;
 
         case IDLE:
             if (event == CMD_ACT) {
                 /* Open a specific Bank and Row (tRCD delay starts here) */
-                bank->state = BANK_ACTIVE;
+                next_state = BANK_ACTIVE;
             } else if (event == CMD_REF) {
                 /* Refresh all banks (tRFC delay applies) */
-                bank->state = REFRESHING;
+                next_state = REFRESHING;
             }
             break;
 
         case BANK_ACTIVE:
             if (event == CMD_READ) {
                 /* Issue READ command (CAS Latency tCL applies) */
-                bank->state = READING;
+                next_state = READING;
             } else if (event == CMD_WRITE) {
                 /* Issue WRITE command (Write Latency tCWL applies) */
-                bank->state = WRITING;
+                next_state = WRITING;
             } else if (event == CMD_PRE) {
                 /* Close the active row (tRP delay applies) */
-                bank->state = PRECHARGING;
+                next_state = PRECHARGING;
             }
             break;
 
         case READING:
             if (event == BURST_DONE) {
                 /* Return to active bank after burst read completed */
-                bank->state = BANK_ACTIVE;
+                next_state = BANK_ACTIVE;
             }
             break;
 
         case WRITING:
             if (event == BURST_DONE) {
                 /* Return to active bank after burst write completed (tWR delay applies) */
-                bank->state = BANK_ACTIVE;
+                next_state = BANK_ACTIVE;
             }
             break;
 
         case PRECHARGING:
             if (event == PRE_DONE) {
                 /* Row deactivated, bank back to IDLE */
-                bank->state = IDLE;
+                next_state = IDLE;
             }
             break;
 
         case REFRESHING:
             if (event == REF_DONE) {
                 /* Refresh cycle complete */
-                bank->state = IDLE;
+                next_state = IDLE;
             }
             break;
 
@@ -81,6 +80,5 @@ void process_event(struct dram_bank_t *bank, unsigned bank_idx, enum event_t eve
             break;
     }
 
-    printf("[Transition](Bank %u) " RED "%s" RST " -> " GRN "%s" RST "\n", 
-           bank_idx, state_to_str(previous_state), state_to_str(bank->state));
+    return next_state;
 }

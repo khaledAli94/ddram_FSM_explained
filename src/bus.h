@@ -100,7 +100,10 @@ void dram_bus_encode(struct dram_bus_t *bus, enum event_t event, unsigned bank, 
 // Dump CSV trace for Pygame logic analyzer
 void dram_bus_dump_trace(unsigned long long cycle, const struct dram_bus_t *bus);
 
+// Step clock half-cycle and dump trace
+void dram_bus_step_clock(unsigned long long *cycle, struct dram_bus_t *bus);
+
 // Stream data burst across DQS strobes and byte lanes
-void dram_bus_stream_burst(unsigned long long *cycle, struct dram_bus_t *bus, const unsigned char *pattern, unsigned length);
+void dram_bus_stream_burst(unsigned long long *cycle, struct dram_bus_t *bus, const unsigned char *pattern, unsigned length, unsigned char dm0, unsigned char dm1);
 
 #endif /* __BUS_H__ */

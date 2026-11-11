@@ -1,5 +1,18 @@
 #include "main.h"
 
+void usage(void) {
+    printf("\n=== JEDEC DDR3 Simulator ===\n"
+           "  Usage:\n"
+           "  act <bank> <row>     - ACTIVATE command (Opens Row)\n"
+           "  read <bank> <col>    - READ command (Read Burst + Strobes)\n"
+           "  write <bank> <col>   - WRITE command (Write Burst + Strobes)\n"
+           "  mwrite <bank> <col> <dm0> <dm1> - Masked WRITE command (Mask Bytes)\n"
+           "  pre <bank>           - PRECHARGE command (Closes Row)\n"
+           "  refresh              - REFRESH command (All Banks)\n"
+           "  status               - Show all banks status\n"
+           "===========================================================\n");
+}
+
 int main(void) {
     setvbuf(stdout, NULL, _IONBF, 0);
     usage();
@@ -40,9 +53,17 @@ int main(void) {
                 while (getchar() != '\n');
                 continue;
             }
-            ctrl_handle_data_command(&ctrl, &dram, &bus, cmd, b, (unsigned short)c);
+            ctrl_handle_data_command(&ctrl, &dram, &bus, cmd, b, (unsigned short)c, 0, 0);
+        } else if (strcmp(cmd, "mwrite") == 0) {
+            unsigned dm0, dm1;
+            if (scanf("%u %u %u %u", &b, &c, &dm0, &dm1) != 4 || b >= NUM_BANKS) {
+                printf("Error: mwrite requires <bank (0-%d)> <col> <dm0> <dm1>\n", NUM_BANKS - 1);
+                while (getchar() != '\n');
+                continue;
+            }
+            ctrl_handle_data_command(&ctrl, &dram, &bus, "write", b, (unsigned short)c, (unsigned char)dm0, (unsigned char)dm1);
         } else {
-            printf("Unknown command. Type act, read, write, pre, refresh, or status.\n");
+            printf("Unknown command '%s'. Type 'help' for usage.\n", cmd);
             while (getchar() != '\n');
         }
     }

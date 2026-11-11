@@ -6,8 +6,6 @@
 #include "bus.h"
 #include "chip.h"
 
-#define NUM_BANKS 8
-
 // JEDEC Timing, Configuration, and AC Specifications for DDR3-1600 (11-11-11)
 struct ddr3_timing_t {
     // Cycle-Count Timestamps & Latencies (Integer Clocks)
@@ -57,6 +55,6 @@ void ctrl_handle_status(const struct dram_chip_t *dram);
 void ctrl_handle_refresh(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus);
 void ctrl_handle_activate(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, unsigned bank, unsigned short row);
 void ctrl_handle_precharge(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, unsigned bank);
-void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, const char *type, unsigned bank, unsigned short col);
+void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, const char *type, unsigned bank, unsigned short col, unsigned char dm0, unsigned char dm1);
 
 #endif /* __CTRL_H__ */

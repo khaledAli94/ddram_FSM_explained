@@ -3,12 +3,6 @@
 
 struct dram_bank_t;
 
-// Terminal ANSI Color Macros
-#define RST   "\033[0m"
-#define RED   "\033[31m"
-#define GRN   "\033[32m"
-#define YEL   "\033[33m"
-
 enum state_t {
     RESET,
     INITIALIZATION,
@@ -49,6 +43,6 @@ static inline const char *state_to_str(enum state_t state){
 }
 
 /* func prototype */
-void process_event(struct dram_bank_t *bank, unsigned bank_idx, enum event_t event);
+enum state_t process_event(enum state_t current_state, enum event_t event);
 
 #endif /* __FSM_H__ */

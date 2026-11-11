@@ -1,29 +1,27 @@
-#include "ctrl.h"
 #include <stdio.h>
 #include <string.h>
+#include "main.h"
+#include "ctrl.h"
+#include "bus.h"
+#include "chip.h"
+#include "fsm.h"
 
 void ddr3_init_controller(struct ddr_ctrl_t *ctrl) {
-    ctrl->current_cycle = 0;
-
-    // 1. Initialize cycle-count latencies
+    // JEDEC DDR3-1600 (11-11-11) Timing Specifications
     ctrl->timing.tRCD = 11;
-    ctrl->timing.tRP  = 11;
-    ctrl->timing.tCL  = 11;
+    ctrl->timing.tRP = 11;
+    ctrl->timing.tCL = 11;
     ctrl->timing.tCWL = 8;
-    ctrl->timing.tWR  = 12;
+    ctrl->timing.tWR = 12;
     ctrl->timing.tRFC = 74;
+    ctrl->timing.burst_length = 8;
 
-    // 2. Configure default Burst Length
-    ctrl->timing.burst_length = 8; // BL8
-
-    // 3. Initialize AC Timing specifications (DDR3-1600 @ 800MHz -> tCK = 1.25 ns)
     ctrl->timing.tCK = 1.25;
     ctrl->timing.tDQSCK = 0.45;
     ctrl->timing.tQSH = 0.45 * ctrl->timing.tCK;
     ctrl->timing.tQSL = 0.45 * ctrl->timing.tCK;
     ctrl->timing.tBURST = (ctrl->timing.burst_length / 2.0) * ctrl->timing.tCK;
 
-    // 4. Initialize bank timestamps
     for (int i = 0; i < NUM_BANKS; i++) {
         ctrl->banks[i].last_act_cycle = 0;
         ctrl->banks[i].last_pre_cycle = 0;
@@ -35,8 +33,13 @@ void ctrl_boot_sequence(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struc
     (void)ctrl;
     (void)bus;
     for (int i = 0; i < NUM_BANKS; i++) {
-        process_event(&dram->banks[i], i, POWER_ON);
-        process_event(&dram->banks[i], i, INIT_DONE);
+        enum state_t p1 = dram->banks[i].state;
+        dram->banks[i].state = process_event(p1, POWER_ON);
+        printf("[Transition](Bank %u) " RED "%s" RST " -> " GRN "%s" RST "\n", i, state_to_str(p1), state_to_str(dram->banks[i].state));
+
+        enum state_t p2 = dram->banks[i].state;
+        dram->banks[i].state = process_event(p2, INIT_DONE);
+        printf("[Transition](Bank %u) " RED "%s" RST " -> " GRN "%s" RST "\n", i, state_to_str(p2), state_to_str(dram->banks[i].state));
     }
 }
 
@@ -52,11 +55,17 @@ void ctrl_handle_refresh(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, stru
     for (int i = 0; i < NUM_BANKS; i++) {
         // 1. Command Phase (REF)
         dram_bus_encode(bus, CMD_REF, i, 0);
+        bus->ck0 = 1; bus->ck1 = 0;
         dram_bus_dump_trace(++ctrl->current_cycle, bus);
         dram_chip_receive_bus(dram, i, bus);
+        dram_bus_step_clock(&ctrl->current_cycle, bus);
 
         // 2. Internal Completion Phase (REF_DONE)
-        process_event(&dram->banks[i], i, REF_DONE);
+        enum state_t prev = dram->banks[i].state;
+        dram->banks[i].state = process_event(prev, REF_DONE);
+        if (prev != dram->banks[i].state) {
+            printf("[Transition](Bank %u) " RED "%s" RST " -> " GRN "%s" RST "\n", i, state_to_str(prev), state_to_str(dram->banks[i].state));
+        }
     }
 }
 
@@ -75,8 +84,10 @@ void ctrl_handle_activate(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, str
 
     dram_bus_encode(bus, CMD_ACT, bank, row);
     bus->addr.val = row & 0x3FFF; // 14-bit Row address on A[0..13]
+    bus->ck0 = 1; bus->ck1 = 0;
     dram_bus_dump_trace(++ctrl->current_cycle, bus);
     dram_chip_receive_bus(dram, bank, bus);
+    dram_bus_step_clock(&ctrl->current_cycle, bus);
 }
 
 void ctrl_handle_precharge(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, unsigned bank) {
@@ -92,14 +103,20 @@ void ctrl_handle_precharge(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, st
     }
     // 1. Command Phase (PRE)
     dram_bus_encode(bus, CMD_PRE, bank, 0);
+    bus->ck0 = 1; bus->ck1 = 0;
     dram_bus_dump_trace(++ctrl->current_cycle, bus);
     dram_chip_receive_bus(dram, bank, bus);
+    dram_bus_step_clock(&ctrl->current_cycle, bus);
 
     // 2. Internal Completion Phase (PRE_DONE)
-    process_event(bank_ptr, bank, PRE_DONE);
+    enum state_t prev = bank_ptr->state;
+    bank_ptr->state = process_event(prev, PRE_DONE);
+    if (prev != bank_ptr->state) {
+        printf("[Transition](Bank %u) " RED "%s" RST " -> " GRN "%s" RST "\n", bank, state_to_str(prev), state_to_str(bank_ptr->state));
+    }
 }
 
-void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, const char *type, unsigned bank, unsigned short col) {
+void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, const char *type, unsigned bank, unsigned short col, unsigned char dm0, unsigned char dm1) {
     if (bank >= NUM_BANKS) {
         printf("Error: Invalid bank %u\n", bank);
         return;
@@ -117,21 +134,26 @@ void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram,
     dram_bus_encode(bus, cmd_ev, bank, col);
     unsigned short col_bits = col & 0x03FF;                  // Column address on A[0..9]
     bus->addr.val = col_bits;
+    bus->ck0 = 1; bus->ck1 = 0;
     dram_bus_dump_trace(++ctrl->current_cycle, bus);
     dram_chip_receive_bus(dram, bank, bus);
+    dram_bus_step_clock(&ctrl->current_cycle, bus);
 
     // 2. Latency Phase (Controller enforces tCL / tCWL)
     unsigned latency = (cmd_ev == CMD_READ) ? ctrl->timing.tCL : ctrl->timing.tCWL;
     for (unsigned c = 0; c < latency; c++) {
-        ctrl->current_cycle++;
         dram_bus_encode(bus, CMD_NOP, 0, 0);
-        dram_bus_dump_trace(ctrl->current_cycle, bus);
+        dram_bus_step_clock(&ctrl->current_cycle, bus);
     }
 
     // 3. Data Phase (Strobe streaming)
     unsigned char pattern[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
-    dram_bus_stream_burst(&ctrl->current_cycle, bus, pattern, ctrl->timing.burst_length);
+    dram_bus_stream_burst(&ctrl->current_cycle, bus, pattern, ctrl->timing.burst_length, dm0, dm1);
 
     // 4. Internal Completion Phase (BURST_DONE)
-    process_event(bank_ptr, bank, BURST_DONE);
+    enum state_t prev = bank_ptr->state;
+    bank_ptr->state = process_event(prev, BURST_DONE);
+    if (prev != bank_ptr->state) {
+        printf("[Transition](Bank %u) " RED "%s" RST " -> " GRN "%s" RST "\n", bank, state_to_str(prev), state_to_str(bank_ptr->state));
+    }
 }
