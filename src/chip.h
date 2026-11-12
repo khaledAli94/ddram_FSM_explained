@@ -11,6 +11,7 @@
 
 /*
  * density = banks × rows × columns × organization
+ * page_sz = 2^ROW_BITS * ORG / 8
  * bank_bits = log2(banks)
  * row_bits  = log2(rows)
  * col_bits  = log2(columns)
