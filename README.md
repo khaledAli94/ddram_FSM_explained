@@ -1,9 +1,9 @@
 
 # DDRAM_SIMULATION_ENGINE
-this Repo is for demonstrating how ddr finite state machine works in principle, so dont mix between real hardware DDR-controller with physical layer with this FSM concept 
 
 > **Copyright (c) 2026 [Khaled Ali]. All Rights Reserved.**  
 > *This repository is strictly for portfolio demonstration and code inspection. No rights are granted to use, copy, modify, or distribute this code.*
+
 ![License: All Rights Reserved](https://img.shields.io/badge/License-All_Rights_Reserved-red.svg)
 ![Version](https://img.shields.io/badge/version-v0.0.1-blue)
 

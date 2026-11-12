@@ -8,15 +8,9 @@ ddr3_sim
 # Temporary / notes / dumps
 TODO
 
-# Editor / IDE files
 .vscode/
-.idea/
-*.swp
-*.swo
-.DS_Store
 
 # Private visualization scripts (keep local)
 simulate.py
 plot.py
-
-
+2527.gif
