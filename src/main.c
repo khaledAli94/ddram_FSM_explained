@@ -13,7 +13,9 @@ void usage(void) {
            "===========================================================\n");
 }
 
-int main(void) {
+int main(int argc, char **argv) {
+    (void)argc; (void)argv;
+    
     setvbuf(stdout, NULL, _IONBF, 0);
     usage();
     
