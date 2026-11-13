@@ -1,6 +1,6 @@
 # Compiler and Flags
 CC       := gcc
-CFLAGS   := -Wall -Wextra -Werror -std=c99 -Isrc
+CFLAGS   := -Wall -Wextra -Werror -std=c99 -Isrc -g 
 TARGET   := ddr3_sim
 
 # Directories
