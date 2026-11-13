@@ -7,10 +7,9 @@ ddr3_sim
 
 # Temporary / notes / dumps
 TODO
-
+./tmp/
 .vscode/
 
 # Private visualization scripts (keep local)
 simulate.py
 plot.py
-2527.gif
