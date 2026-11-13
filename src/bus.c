@@ -84,24 +84,20 @@ void dram_bus_step_clock(unsigned long long *cycle, struct dram_bus_t *bus) {
     dram_bus_dump_trace(*cycle, bus);
 }
 
-void dram_bus_stream_burst(unsigned long long *cycle, struct dram_bus_t *bus, const unsigned char *pattern, unsigned length, unsigned char dm0, unsigned char dm1) {
+/* stub for simulation, not actual storage/retrive */
+void dram_bus_stream_burst(unsigned long long *cycle, struct dram_bus_t *bus, const unsigned char *pattern, unsigned length, unsigned char dm0, unsigned char dm1, unsigned char dm2, unsigned char dm3) {
     for (unsigned beat = 0; beat < length; beat++) {
-        // --- Rising Strobe Edge ---
-        (*cycle)++;
-        bus->ck0 = 1;
-        bus->ck1 = 0;
         bus->dqs0 = 1;
         bus->dq.bytes[0].byte = pattern[beat];
         bus->dq.bytes[1].byte = pattern[beat] + 1;
         bus->dm0 = dm0;
         bus->dm1 = dm1;
-        dram_bus_dump_trace(*cycle, bus);
+        bus->dm2 = dm2;
+        bus->dm3 = dm3;
+        dram_bus_step_clock(cycle, bus);
 
         // --- Falling Strobe Edge ---
-        (*cycle)++;
-        bus->ck0 = 0;
-        bus->ck1 = 1;
         bus->dqs0 = 0;
-        dram_bus_dump_trace(*cycle, bus);
+        dram_bus_step_clock(cycle, bus);
     }
 }

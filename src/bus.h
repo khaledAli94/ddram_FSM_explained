@@ -104,6 +104,6 @@ void dram_bus_dump_trace(unsigned long long cycle, const struct dram_bus_t *bus)
 void dram_bus_step_clock(unsigned long long *cycle, struct dram_bus_t *bus);
 
 // Stream data burst across DQS strobes and byte lanes
-void dram_bus_stream_burst(unsigned long long *cycle, struct dram_bus_t *bus, const unsigned char *pattern, unsigned length, unsigned char dm0, unsigned char dm1);
+void dram_bus_stream_burst(unsigned long long *cycle, struct dram_bus_t *bus, const unsigned char *pattern, unsigned length, unsigned char dm0, unsigned char dm1, unsigned char dm2, unsigned char dm3);
 
 #endif /* __BUS_H__ */

@@ -33,6 +33,11 @@ struct bank_timing_t {
     unsigned long long last_pre_cycle;
 };
 
+// rank definition
+struct rank_t {
+    // should contain banks themselves i belive 
+};
+
 // Memory Controller (The Master / Arbiter)
 struct ddr_ctrl_t {
     unsigned long long current_cycle;
@@ -55,6 +60,7 @@ void ctrl_handle_status(const struct dram_chip_t *dram);
 void ctrl_handle_refresh(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus);
 void ctrl_handle_activate(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, unsigned bank, unsigned short row);
 void ctrl_handle_precharge(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, unsigned bank);
-void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, const char *type, unsigned bank, unsigned short col, unsigned char dm0, unsigned char dm1);
+void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, const char *type, unsigned bank, unsigned short col, unsigned char dm0, unsigned char dm1, unsigned char dm2, unsigned char dm3);
+
 
 #endif /* __CTRL_H__ */

@@ -6,7 +6,7 @@ void usage(void) {
            "  act <bank> <row>     - ACTIVATE command (Opens Row)\n"
            "  read <bank> <col>    - READ command (Read Burst + Strobes)\n"
            "  write <bank> <col>   - WRITE command (Write Burst + Strobes)\n"
-           "  mwrite <bank> <col> <dm0> <dm1> - Masked WRITE command (Mask Bytes)\n"
+           "  mwrite <bank> <col> <dm0> <dm1> <dm2> <dm3> - Masked WRITE command (Mask Bytes)\n"
            "  pre <bank>           - PRECHARGE command (Closes Row)\n"
            "  refresh              - REFRESH command (All Banks)\n"
            "  status               - Show all banks status\n"
@@ -55,15 +55,15 @@ int main(int argc, char **argv) {
                 while (getchar() != '\n');
                 continue;
             }
-            ctrl_handle_data_command(&ctrl, &dram, &bus, cmd, b, (unsigned short)c, 0, 0);
+            ctrl_handle_data_command(&ctrl, &dram, &bus, cmd, b, (unsigned short)c, 0, 0, 0, 0);
         } else if (strcmp(cmd, "mwrite") == 0) {
             unsigned dm0, dm1;
             if (scanf("%u %u %u %u", &b, &c, &dm0, &dm1) != 4 || b >= NUM_BANKS) {
-                printf("Error: mwrite requires <bank (0-%d)> <col> <dm0> <dm1>\n", NUM_BANKS - 1);
+                printf("Error: mwrite requires <bank (0-%d)> <col> <dm0> <dm1> <dm2> <dm3>\n", NUM_BANKS - 1);
                 while (getchar() != '\n');
                 continue;
             }
-            ctrl_handle_data_command(&ctrl, &dram, &bus, "write", b, (unsigned short)c, (unsigned char)dm0, (unsigned char)dm1);
+            ctrl_handle_data_command(&ctrl, &dram, &bus, "write", b, (unsigned short)c, (unsigned char)dm0, (unsigned char)dm1, (unsigned char)0, (unsigned char)0);
         } else {
             printf("Unknown command '%s'. Type 'help' for usage.\n", cmd);
             while (getchar() != '\n');

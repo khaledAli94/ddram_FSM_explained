@@ -116,12 +116,13 @@ void ctrl_handle_precharge(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, st
     }
 }
 
-void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, const char *type, unsigned bank, unsigned short col, unsigned char dm0, unsigned char dm1) {
+void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram, struct dram_bus_t *bus, const char *type, unsigned bank, unsigned short col, unsigned char dm0, unsigned char dm1, unsigned char dm2, unsigned char dm3) {
     if (bank >= NUM_BANKS) {
         printf("Error: Invalid bank %u\n", bank);
         return;
     }
     struct dram_bank_t *bank_ptr = &dram->banks[bank];
+    
     if (bank_ptr->state != BANK_ACTIVE) {
         printf("[Protocol Error] Cannot %s Bank %u from state " GRN "%s" RST " (Bank must be " YEL "BANK_ACTIVE" RST ")\n",
                type, bank, state_to_str(bank_ptr->state));
@@ -134,9 +135,11 @@ void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram,
     dram_bus_encode(bus, cmd_ev, bank, col);
     unsigned short col_bits = col & 0x03FF;                  // Column address on A[0..9]
     bus->addr.val = col_bits;
-    bus->ck0 = 1; bus->ck1 = 0;
-    dram_bus_dump_trace(++ctrl->current_cycle, bus);
+
+    // Rising edge
+    dram_bus_step_clock(&ctrl->current_cycle, bus);
     dram_chip_receive_bus(dram, bank, bus);
+    // Falling edge
     dram_bus_step_clock(&ctrl->current_cycle, bus);
 
     // 2. Latency Phase (Controller enforces tCL / tCWL)
@@ -147,8 +150,9 @@ void ctrl_handle_data_command(struct ddr_ctrl_t *ctrl, struct dram_chip_t *dram,
     }
 
     // 3. Data Phase (Strobe streaming)
-    unsigned char pattern[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
-    dram_bus_stream_burst(&ctrl->current_cycle, bus, pattern, ctrl->timing.burst_length, dm0, dm1);
+    // unsigned char pattern[8] = {0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88};
+    unsigned char pattern[8] = {0xde, 0xad, 0xbe, 0xef, 0xca, 0xfe, 0xc0, 0xde};
+    dram_bus_stream_burst(&ctrl->current_cycle, bus, pattern, ctrl->timing.burst_length, dm0, dm1, dm2, dm3);
 
     // 4. Internal Completion Phase (BURST_DONE)
     enum state_t prev = bank_ptr->state;
