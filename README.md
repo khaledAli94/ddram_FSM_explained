@@ -2,7 +2,7 @@
 # DDRAM_SIMULATION_ENGINE
 
 > **Copyright (c) 2026 [Khaled Ali]. All Rights Reserved.**  
-> *This repository is strictly for portfolio demonstration and code inspection. No rights are granted to use, copy, modify, or distribute this code.*
+> *This repository is strictly for portfolio demonstration and code inspection. No rights are granted to copy or distribute this code.*
 
 ![License: All Rights Reserved](https://img.shields.io/badge/License-All_Rights_Reserved-red.svg)
 ![Version](https://img.shields.io/badge/version-v0.0.1-blue)
