@@ -7,7 +7,7 @@ ddr3_sim
 
 # Temporary / notes / dumps
 TODO
-./tmp/
+tmp/
 .vscode/
 
 # Private visualization scripts (keep local)

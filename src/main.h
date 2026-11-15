@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include "ctrl.h"
 #include "chip.h"
-#include "bus.h"
 
 // Terminal ANSI Color Macros
 #define RST   "\033[0m"
