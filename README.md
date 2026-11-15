@@ -36,7 +36,7 @@ enum ddr3_event_t {
 ## usage:
 ![](img/usage.gif)
 
-## final goal "under construction🚧":
+## final goal:
 read operation:
 ![](img/read.gif)
 

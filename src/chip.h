@@ -121,7 +121,7 @@ enum dram_density_t {
     DENSITY_4G
 };
 
-// bank protocol state
+// statful struct of the bank
 struct bank_t {
     enum state_t state;     // IDLE, BANK_ACTIVE, READING, WRITING, etc.
     unsigned open_row;      // (if BANK_ACTIVE) currently in sense amplifier

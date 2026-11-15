@@ -238,6 +238,7 @@ void ctrl_handle_refresh(struct ctrl_t *ctrl, struct phy_pins_t *pins, unsigned 
         printf("[Protocol Error] " YEL "Cannot issue refresh. All banks in rank %u must be IDLE." RST "\n", rank);
         return;
     }
+    
     for (int b = 0; b < NUM_BANKS; b++) {
         // 1. Command Phase (REF)
         ctrl_drive_command(pins, CMD_REF, rank, b, 0);
@@ -267,6 +268,7 @@ void ctrl_handle_activate(struct ctrl_t *ctrl, struct phy_pins_t *pins, unsigned
         printf("Error: Invalid bank %u\n", bank);
         return;
     }
+
     struct bank_t *bank_ptr = &ctrl->rank[rank].chip.banks[bank];
     if (bank_ptr->state != IDLE) {
         printf("[Protocol Error] Cannot ACTIVATE Rank %u Bank %u from state " GRN "%s" RST " (Bank must be " YEL "IDLE" RST ")\n",
@@ -333,6 +335,7 @@ void ctrl_handle_write(struct ctrl_t *ctrl, struct phy_pins_t *pins,
                ctrl->timing.burst_length, DDR_MAX_BURST_LENGTH);
         return;
     }
+
     struct bank_t *bank_ptr = &ctrl->rank[rank].chip.banks[bank];
     if (bank_ptr->state != BANK_ACTIVE) {
         printf("[Protocol Error] Cannot WRITE Rank %u Bank %u from state " GRN "%s" RST " (Bank must be " YEL "BANK_ACTIVE" RST ")\n",
@@ -340,6 +343,7 @@ void ctrl_handle_write(struct ctrl_t *ctrl, struct phy_pins_t *pins,
         return;
     }
 
+    /* order matters */
     // 1. Command Phase
     ctrl_drive_command(pins, CMD_WRITE, rank, bank, col);
     unsigned short col_bits = col & 0x03FF; // Column address on A[0..9]
@@ -381,6 +385,7 @@ void ctrl_handle_read(struct ctrl_t *ctrl, struct phy_pins_t *pins,
         printf("Error: Invalid bank %u\n", bank);
         return;
     }
+
     struct bank_t *bank_ptr = &ctrl->rank[rank].chip.banks[bank];
     if (bank_ptr->state != BANK_ACTIVE) {
         printf("[Protocol Error] Cannot READ Rank %u Bank %u from state " GRN "%s" RST " (Bank must be " YEL "BANK_ACTIVE" RST ")\n",
@@ -388,6 +393,7 @@ void ctrl_handle_read(struct ctrl_t *ctrl, struct phy_pins_t *pins,
         return;
     }
 
+    /* order matters */
     // 1. Command Phase
     ctrl_drive_command(pins, CMD_READ, rank, bank, col);
     unsigned short col_bits = col & 0x03FF;
