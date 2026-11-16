@@ -1,5 +1,6 @@
 # Build output and compiled binaries
 build/
+dist/
 ddr3_sim
 *.o
 *.exe
@@ -10,6 +11,6 @@ TODO
 tmp/
 .vscode/
 
-# Private visualization scripts (keep local)
+# Private visualization scripts
 simulate.py
 plot.py
