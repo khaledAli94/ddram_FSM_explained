@@ -32,6 +32,10 @@ enum ddr3_event_t {
     BURST_DONE    /* Burst Read/Write completed */
 };
 ```
+## enable pip stream for xfer data
+```bash
+$ ./ddr3_sim | ./simulate
+````
 
 ## usage:
 ![](img/usage.gif)
