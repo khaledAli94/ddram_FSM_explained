@@ -50,6 +50,8 @@ write operation:
 masked write  operation:
 ![](img/mwrite.gif)
 
+## Comming soon!
+![](img/comming_soon.png)
 
 ## Simplified State Diagram 
 ![](img/DRAM_FSM.png)
